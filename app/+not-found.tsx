@@ -8,8 +8,8 @@ const NotFoundScreen = () => {
   return (
     <SafeAreaView className="h-full justify-center bg-white p-10">
       <View className="relative">
-        <Text className="font-OutfitExtraBold text-primary text-7xl">404</Text>
-        <View className="bg-primary/20 absolute -left-32 -top-20 -z-10 h-52 w-52 rounded-bl-[4444px] rounded-br-[7777px] rounded-tl-[4444px] rounded-tr-[4444px]" />
+        <Text className="font-OutfitExtraBold text-7xl text-primary">404</Text>
+        <View className="absolute -left-32 -top-20 -z-10 h-52 w-52 rounded-bl-[4444px] rounded-br-[7777px] rounded-tl-[4444px] rounded-tr-[4444px] bg-primary/20" />
       </View>
 
       <View className="py-7">

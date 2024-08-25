@@ -26,6 +26,7 @@ const RootLayout = () => {
   return (
     <Stack screenOptions={{ headerShown: false, statusBarStyle: "dark" }}>
       <Stack.Screen name="index" />
+      <Stack.Screen name="(auth)" />
     </Stack>
   )
 }
