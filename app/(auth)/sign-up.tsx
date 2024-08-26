@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { router } from "expo-router"
+import axios, { AxiosError } from "axios"
 import { Ionicons } from "@expo/vector-icons"
-import { ScrollView, Text, View } from "react-native"
+import { Alert, ScrollView, Text, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import { Input } from "@/components/ui/input"
@@ -13,12 +14,12 @@ const SignUp = () => {
   const [error, setError] = useState({ name: "", email: "", password: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     setIsSubmitting(true)
 
     try {
-      const namePattern = /^[a-zA-Z]{3,}$/
-      const emailPattern = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/
+      const namePattern = /^[a-zA-Z ]+$/
+      const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
       const passwordPattern =
         /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/
 
@@ -48,9 +49,17 @@ const SignUp = () => {
       )
         return
 
-      // Simulate API call
+      await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/sign-up`, form)
+
+      return router.push({
+        pathname: "/(auth)/otp",
+        params: { email: form.email }
+      })
     } catch (error) {
-      console.log(error)
+      if (error instanceof AxiosError) {
+        setForm({ name: "", email: "", password: "" })
+        return Alert.alert("Error!", error.response?.data.error[0].name)
+      }
     } finally {
       setIsSubmitting(false)
     }

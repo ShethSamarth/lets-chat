@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text } from "react-native"
+import { TouchableOpacity, Text, ActivityIndicator } from "react-native"
 
 import { ButtonProps } from "@/types"
 
@@ -51,11 +51,15 @@ export const Button = ({
       {...props}
     >
       {IconLeft && <IconLeft />}
-      <Text
-        className={`font-OutfitBold text-lg font-bold ${getTextVariantStyle(textVariant)}`}
-      >
-        {title}
-      </Text>
+      {disabled ? (
+        <ActivityIndicator size={30} color="white" />
+      ) : (
+        <Text
+          className={`font-OutfitBold text-lg font-bold ${getTextVariantStyle(textVariant)}`}
+        >
+          {title}
+        </Text>
+      )}
       {IconRight && <IconRight />}
     </TouchableOpacity>
   )

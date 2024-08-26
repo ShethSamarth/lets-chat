@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { router } from "expo-router"
+import axios, { AxiosError } from "axios"
 import { Ionicons } from "@expo/vector-icons"
-import { ScrollView, Text, View } from "react-native"
+import { Alert, ScrollView, Text, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import { Input } from "@/components/ui/input"
@@ -12,11 +13,11 @@ const ForgotPassword = () => {
   const [error, setError] = useState({ email: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleForgotPassword = () => {
+  const handleForgotPassword = async () => {
     setIsSubmitting(true)
 
     try {
-      const emailPattern = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/
+      const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 
       if (!emailPattern.test(form.email)) {
         return setError((prev) => ({
@@ -27,9 +28,20 @@ const ForgotPassword = () => {
         setError((prev) => ({ ...prev, email: "" }))
       }
 
-      // Simulate API call
+      await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/auth/forgot-password`,
+        form
+      )
+
+      return router.push({
+        pathname: "/(auth)/reset-password",
+        params: { email: form.email }
+      })
     } catch (error) {
-      console.log(error)
+      if (error instanceof AxiosError) {
+        setForm({ email: "" })
+        return Alert.alert("Error!", error.response?.data.error[0].name)
+      }
     } finally {
       setIsSubmitting(false)
     }

@@ -4,6 +4,8 @@ import { Stack } from "expo-router"
 import { useFonts } from "expo-font"
 import { hideAsync, preventAutoHideAsync } from "expo-splash-screen"
 
+import { AuthProvider, useAuth } from "@/context/auth-context"
+
 preventAutoHideAsync()
 
 const RootLayout = () => {
@@ -17,16 +19,29 @@ const RootLayout = () => {
     "Outfit-ExtraBold": require("@/assets/fonts/Outfit-ExtraBold.ttf")
   })
 
-  useEffect(() => {
-    if (loaded || error) hideAsync()
-  }, [loaded, error])
-
   if (!loaded && !error) return null
+
+  return (
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
+  )
+}
+
+const RootNavigator = () => {
+  const { authState } = useAuth()
+
+  useEffect(() => {
+    if (authState !== null) hideAsync()
+  }, [authState])
+
+  if (authState === null) return null
 
   return (
     <Stack screenOptions={{ headerShown: false, statusBarStyle: "dark" }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
     </Stack>
   )
 }

@@ -1,23 +1,28 @@
 import { useState } from "react"
 import { router } from "expo-router"
+import axios, { AxiosError } from "axios"
 import { Ionicons } from "@expo/vector-icons"
-import { ScrollView, Text, View } from "react-native"
+import { setItemAsync } from "expo-secure-store"
+import { Alert, ScrollView, Text, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/context/auth-context"
 
 const SignIn = () => {
+  const { setAuthState } = useAuth()
+
   const [showPassword, setShowPassword] = useState(false)
   const [form, setForm] = useState({ email: "", password: "" })
   const [error, setError] = useState({ email: "", password: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     setIsSubmitting(true)
 
     try {
-      const emailPattern = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/
+      const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 
       if (!emailPattern.test(form.email)) {
         setError((prev) => ({ ...prev, email: "Please enter a valid email" }))
@@ -32,11 +37,28 @@ const SignIn = () => {
       } else {
         setError((prev) => ({ ...prev, password: "" }))
       }
-      if (!emailPattern.test(form.email) || form.password.length > 3) return
+      if (!emailPattern.test(form.email) || form.password.length < 3) return
 
-      // Simulate API call
+      const res = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/auth/sign-in`,
+        form
+      )
+
+      await setItemAsync("access_token", res.data.accessToken)
+      await setItemAsync("refresh_token", res.data.refreshToken)
+
+      setAuthState({
+        accessToken: res.data.accessToken,
+        refreshToken: res.data.refreshToken,
+        authenticated: true
+      })
+
+      return router.push("/(tabs)/chats")
     } catch (error) {
-      console.log(error)
+      if (error instanceof AxiosError) {
+        setForm({ email: "", password: "" })
+        return Alert.alert("Error!", error.response?.data.error[0].name)
+      }
     } finally {
       setIsSubmitting(false)
     }

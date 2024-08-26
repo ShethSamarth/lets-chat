@@ -1,20 +1,41 @@
 import { useState } from "react"
+import axios, { AxiosError } from "axios"
 import { Ionicons } from "@expo/vector-icons"
-import { ScrollView, Text, View } from "react-native"
+import { OtpInput } from "react-native-otp-entry"
+import { router, useLocalSearchParams } from "expo-router"
+import { Alert, ScrollView, Text, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 const ResetPassword = () => {
-  const [form, setForm] = useState({ password: "", confirmPassword: "" })
-  const [error, setError] = useState({ password: "", confirmPassword: "" })
+  const { email } = useLocalSearchParams<{ email: string }>()
+
+  const [form, setForm] = useState({
+    code: "",
+    password: "",
+    confirmPassword: ""
+  })
+  const [error, setError] = useState({
+    code: "",
+    password: "",
+    confirmPassword: ""
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     setIsSubmitting(true)
 
     try {
+      if (form.code.length !== 6) {
+        setError((prev) => ({
+          ...prev,
+          code: "Code needs to be exact 6 digits"
+        }))
+      } else {
+        setError((prev) => ({ ...prev, code: "" }))
+      }
       if (form.password !== form.confirmPassword) {
         setError((prev) => ({
           ...prev,
@@ -37,14 +58,28 @@ const ResetPassword = () => {
       }
 
       if (
+        form.code.length !== 6 ||
         form.password !== form.confirmPassword ||
         !passwordPattern.test(form.password)
       )
         return
 
-      // Simulate API call
+      await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/auth/reset-password`,
+        { email, code: form.code, password: form.password }
+      )
+
+      Alert.alert(
+        "Success!",
+        "Password has been reset. You can now sign in with your new password."
+      )
+
+      return router.replace("/(auth)/sign-in")
     } catch (error) {
-      console.log(error)
+      if (error instanceof AxiosError) {
+        // setForm({ ...form, password: "", confirmPassword: "" })
+        return Alert.alert("Error!", error.response?.data.error[0].name)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -62,6 +97,22 @@ const ResetPassword = () => {
           </Text>
 
           <View className="py-10">
+            <Text className="mb-1 font-OutfitSemiBold text-lg text-primary">
+              Code
+            </Text>
+            <OtpInput
+              autoFocus
+              type="numeric"
+              numberOfDigits={6}
+              focusColor="#1F41BB"
+              disabled={isSubmitting}
+              onTextChange={(text) => setForm({ ...form, code: text })}
+            />
+            {error.code && (
+              <Text className="font-Outfit text-base text-rose-500">
+                {error.code}
+              </Text>
+            )}
             <Input
               secureTextEntry
               label="Password"

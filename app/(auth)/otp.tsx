@@ -1,18 +1,34 @@
 import { useState } from "react"
+import axios, { AxiosError } from "axios"
 import { OtpInput } from "react-native-otp-entry"
-import { ScrollView, Text, View } from "react-native"
+import { router, useLocalSearchParams } from "expo-router"
+import { Alert, ScrollView, Text, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 const Otp = () => {
+  const { email } = useLocalSearchParams<{ email: string }>()
+
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleOtp = (code: string) => {
+  const handleOtp = async (code: string) => {
     setIsSubmitting(true)
 
     try {
-      // Simulate API call
+      if (code.length !== 6)
+        return Alert.alert("Invalid code", "Enter a valid code")
+
+      await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/verify-email`, {
+        email,
+        code
+      })
+
+      Alert.alert("Success!", "Email verified successfully")
+
+      return router.replace("/(auth)/sign-in")
     } catch (error) {
-      console.log(error)
+      if (error instanceof AxiosError) {
+        return Alert.alert("Error!", error.response?.data.error[0].name)
+      }
     } finally {
       setIsSubmitting(false)
     }
